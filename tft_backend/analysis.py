@@ -236,7 +236,9 @@ def run_analysis(puuid):
 # ===============================
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
+CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000"], 
+     allow_headers=["Content-Type"], 
+     methods=["GET", "POST", "OPTIONS"])
 
 # Set up logging
 logging.basicConfig(
@@ -244,6 +246,14 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+@app.route('/api/test', methods=['GET', 'POST', 'OPTIONS'])
+def test_endpoint():
+    return jsonify({
+        'message': 'Test endpoint working',
+        'method': request.method,
+        'origin': request.headers.get('Origin')
+    }), 200
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_player():
