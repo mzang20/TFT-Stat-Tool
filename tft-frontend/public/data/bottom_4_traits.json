@@ -1,0 +1,62 @@
+[
+  {
+    "Trait":"TFT13_Challenger",
+    "Top 4 Rate":0.4,
+    "Bottom 4 Rate":0.6,
+    "Games Played":20
+  },
+  {
+    "Trait":"TFT13_Watcher",
+    "Top 4 Rate":0.4545454545,
+    "Bottom 4 Rate":0.5454545455,
+    "Games Played":22
+  },
+  {
+    "Trait":"TFT13_Scrap",
+    "Top 4 Rate":0.4545454545,
+    "Bottom 4 Rate":0.5454545455,
+    "Games Played":22
+  },
+  {
+    "Trait":"TFT13_Cabal",
+    "Top 4 Rate":0.4615384615,
+    "Bottom 4 Rate":0.5384615385,
+    "Games Played":13
+  },
+  {
+    "Trait":"TFT13_Ambassador",
+    "Top 4 Rate":0.4736842105,
+    "Bottom 4 Rate":0.5263157895,
+    "Games Played":19
+  },
+  {
+    "Trait":"TFT13_Sorcerer",
+    "Top 4 Rate":0.4761904762,
+    "Bottom 4 Rate":0.5238095238,
+    "Games Played":21
+  },
+  {
+    "Trait":"TFT13_Martialist",
+    "Top 4 Rate":0.48,
+    "Bottom 4 Rate":0.52,
+    "Games Played":25
+  },
+  {
+    "Trait":"TFT13_Invoker",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":18
+  },
+  {
+    "Trait":"TFT13_Bruiser",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":12
+  },
+  {
+    "Trait":"TFT13_Rebel",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":24
+  }
+]
