@@ -9,6 +9,10 @@ load_dotenv()
 API_KEY = os.getenv("RIOT_API_KEY")
 MASS_REGION = "americas"
 
+# Import and override the TFT_SET from analysis module
+import analysis
+analysis.TFT_SET = 14  # Force Set 14
+
 app = Flask(__name__)
 CORS(app)
 
@@ -49,7 +53,8 @@ def get_puuid_from_riot_id(game_name, tag_line):
 @app.route('/')
 def health_check():
     return jsonify({
-        "status": "TFT Analysis API is running",
+        "status": "TFT Analysis API is running - Set 14",
+        "tft_set": analysis.TFT_SET,
         "api_key_configured": bool(API_KEY),
         "endpoints": {
             "analyze_by_puuid": "/analyze?puuid=YOUR_PUUID",
@@ -80,7 +85,7 @@ def analyze_by_riot_id():
         if not game_name or not tag_line:
             return jsonify({'error': 'Game name and tag line cannot be empty'}), 400
         
-        print(f"Starting analysis for Riot ID: {game_name}#{tag_line}")
+        print(f"Starting Set {analysis.TFT_SET} analysis for Riot ID: {game_name}#{tag_line}")
         
         # First, get the PUUID from Riot ID
         puuid = get_puuid_from_riot_id(game_name, tag_line)
@@ -94,10 +99,11 @@ def analyze_by_riot_id():
             'bottom_traits': bottom_traits,
             'riot_id': f"{game_name}#{tag_line}",
             'puuid': puuid[:8] + '...',
-            'message': 'Analysis completed successfully'
+            'tft_set': analysis.TFT_SET,
+            'message': f'Set {analysis.TFT_SET} analysis completed successfully'
         }
         
-        print(f"Analysis completed successfully for {game_name}#{tag_line}")
+        print(f"Set {analysis.TFT_SET} analysis completed successfully for {game_name}#{tag_line}")
         return jsonify(result), 200
         
     except Exception as e:
@@ -112,7 +118,7 @@ def analyze_by_riot_id():
         elif "Rate limited" in error_message:
             return jsonify({'error': 'Rate limited by Riot API. Please try again in a few minutes.'}), 429
         elif "Insufficient" in error_message:
-            return jsonify({'error': 'Not enough Set 14 matches found for analysis. Play more ranked games and try again.'}), 400
+            return jsonify({'error': f'Not enough Set {analysis.TFT_SET} matches found for analysis. Play more ranked games and try again.'}), 400
         elif "Network error" in error_message or "timeout" in error_message.lower():
             return jsonify({'error': 'Network error. Please check your connection and try again.'}), 503
         else:
@@ -134,7 +140,8 @@ def analyze():
             "top_traits": top,
             "bottom_traits": bot,
             "puuid": puuid[:8] + '...',
-            "message": "Analysis completed successfully"
+            "tft_set": analysis.TFT_SET,
+            "message": f"Set {analysis.TFT_SET} analysis completed successfully"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -146,7 +153,7 @@ if __name__ == "__main__":
     else:
         print("✅ Riot API key configured")
     
-    print("🚀 Starting TFT Analysis API server...")
+    print(f"🚀 Starting TFT Analysis API server... (Set {analysis.TFT_SET})")
     print("📍 Health check and endpoints: /")
     print("📊 Riot ID endpoint: /analyze-riot-id?gameName=NAME&tagLine=TAG")
     print("📊 PUUID endpoint: /analyze?puuid=PUUID")
