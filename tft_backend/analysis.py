@@ -16,6 +16,40 @@ API_KEY = os.getenv("RIOT_API_KEY")
 MASS_REGION = "americas"
 TFT_SET = 13  # Set number for filtering matches
 
+def get_puuid_from_riot_id(game_name, tag_line):
+    """Get PUUID from Riot ID (game name + tag line)"""
+    if not API_KEY:
+        raise Exception("RIOT_API_KEY not found in environment variables")
+    
+    url = f"https://{MASS_REGION}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}?api_key={API_KEY}"
+    print(f"Getting PUUID for {game_name}#{tag_line}...")
+    
+    try:
+        resp = requests.get(url, timeout=15)
+        print(f"Riot ID response: {resp.status_code}")
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            puuid = data.get('puuid')
+            if puuid:
+                print(f"Found PUUID: {puuid[:8]}...")
+                return puuid
+            else:
+                raise Exception("PUUID not found in response")
+        elif resp.status_code == 404:
+            raise Exception("Riot ID not found - check your game name and tag line")
+        elif resp.status_code == 401:
+            raise Exception("Invalid API key")
+        elif resp.status_code == 429:
+            raise Exception("Rate limited - please try again in a few minutes")
+        else:
+            raise Exception(f"API error: {resp.status_code}")
+        
+    except requests.exceptions.Timeout:
+        raise Exception("Request timed out - API may be slow, try again")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Network error: {str(e)}")
+
 def get_match_ids(puuid):
     if not API_KEY:
         raise Exception("RIOT_API_KEY not found in environment variables")
@@ -232,28 +266,6 @@ def run_analysis(puuid):
         raise
 
 # ===============================
-# FLASK WEB SERVER
-# ===============================
-
-app = Flask(__name__)
-CORS(app, origins=["*"])
-
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Add CORS headers to all responses
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    return response
-
-# ===============================
 # FLASK WEB SERVER (GET ONLY)
 # ===============================
 
@@ -274,13 +286,77 @@ def home():
         'status': 'healthy', 
         'message': 'TFT Analysis API is running',
         'api_key_configured': bool(API_KEY),
-        'usage': 'GET /analyze?puuid=YOUR_PUUID'
+        'endpoints': {
+            'analyze_by_puuid': '/analyze?puuid=YOUR_PUUID',
+            'analyze_by_riot_id': '/analyze-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE'
+        },
+        'examples': {
+            'riot_id': '/analyze-riot-id?gameName=WukLamatHater&tagLine=Monke',
+            'puuid': '/analyze?puuid=oeUTUlTvQIJUxqO955b0viyfcv_-2zvQgTSdhgFJg1nTNJpPSMgtu65dKhC780TONNCU91gxAdNjdQ'
+        }
     })
+
+@app.route('/analyze-riot-id')
+def analyze_by_riot_id():
+    """
+    Analyze a player's TFT trait performance using Riot ID
+    Usage: GET /analyze-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE
+    """
+    try:
+        game_name = request.args.get('gameName')
+        tag_line = request.args.get('tagLine')
+        
+        if not game_name or not tag_line:
+            return jsonify({'error': 'Both gameName and tagLine parameters are required'}), 400
+        
+        game_name = game_name.strip()
+        tag_line = tag_line.strip()
+        
+        if not game_name or not tag_line:
+            return jsonify({'error': 'Game name and tag line cannot be empty'}), 400
+        
+        print(f"Starting analysis for Riot ID: {game_name}#{tag_line}")
+        
+        # First, get the PUUID from Riot ID
+        puuid = get_puuid_from_riot_id(game_name, tag_line)
+        
+        # Then run the analysis with the PUUID
+        top_traits, bottom_traits = run_analysis(puuid)
+        
+        # Return the results
+        result = {
+            'top_traits': top_traits,
+            'bottom_traits': bottom_traits,
+            'riot_id': f"{game_name}#{tag_line}",
+            'puuid': puuid[:8] + '...',
+            'message': 'Analysis completed successfully'
+        }
+        
+        print(f"Analysis completed successfully for {game_name}#{tag_line}")
+        return jsonify(result), 200
+        
+    except Exception as e:
+        error_message = str(e)
+        print(f"Analysis failed: {error_message}")
+        
+        # Return appropriate error messages
+        if "API key" in error_message:
+            return jsonify({'error': 'API configuration error'}), 500
+        elif "Riot ID not found" in error_message:
+            return jsonify({'error': 'Riot ID not found - check your game name and tag line'}), 404
+        elif "Rate limited" in error_message:
+            return jsonify({'error': 'Rate limited by Riot API. Please try again in a few minutes.'}), 429
+        elif "Insufficient" in error_message:
+            return jsonify({'error': 'Not enough Set 13 matches found for analysis. Play more ranked games and try again.'}), 400
+        elif "Network error" in error_message or "timeout" in error_message.lower():
+            return jsonify({'error': 'Network error. Please check your connection and try again.'}), 503
+        else:
+            return jsonify({'error': f'Analysis failed: {error_message}'}), 500
 
 @app.route('/analyze')
 def analyze():
     """
-    Analyze a player's TFT trait performance
+    Analyze a player's TFT trait performance using PUUID
     Usage: GET /analyze?puuid=PLAYER_PUUID
     """
     try:
@@ -337,8 +413,9 @@ if __name__ == '__main__':
         print("✅ Riot API key configured")
     
     print("🚀 Starting TFT Analysis API server...")
-    print("📍 Health check: http://localhost:5000/health")
-    print("📊 Analysis endpoint: POST http://localhost:5000/analyze")
+    print("📍 Health check: http://localhost:5000/")
+    print("📊 Riot ID endpoint: GET http://localhost:5000/analyze-riot-id?gameName=NAME&tagLine=TAG")
+    print("📊 PUUID endpoint: GET http://localhost:5000/analyze?puuid=PUUID")
     
     # Run the Flask app
     app.run(debug=True, host='0.0.0.0', port=5000)
