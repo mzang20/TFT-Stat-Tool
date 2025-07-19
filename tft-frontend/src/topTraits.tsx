@@ -13,20 +13,21 @@ interface TraitMeta {
   icon: string;
 }
 
-const TraitsTable: React.FC = () => {
-  const [allTraits, setAllTraits] = useState<TraitStat[]>([]);
+interface TopTraitsProps {
+  data?: {
+    top_traits?: TraitStat[];
+    bottom_traits?: TraitStat[];
+  } | null;
+  loading?: boolean;
+  hasSearched?: boolean;
+}
+
+const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => {
   const [traitMeta, setTraitMeta] = useState<TraitMeta[]>([]);
   const [activeTab, setActiveTab] = useState<'top' | 'bottom'>('top');
 
   useEffect(() => {
-    fetch('./data/top_4_traits.json')
-      .then((res) => res.json())
-      .then(setAllTraits)
-      .catch((err) => console.error("Failed to load trait stats:", err));
-  }, []);
-
-  useEffect(() => {
-    fetch('./data/en_us.json')
+    fetch('https://raw.communitydragon.org/latest/cdragon/tft/en_us.json')
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -93,16 +94,70 @@ const TraitsTable: React.FC = () => {
     return { name: found.name, icon: iconURL };
   };
 
-  // Sort traits by top 4 rate for top traits, and by bottom 4 rate for bottom traits
-  const sortedTopTraits = [...allTraits]
-    .sort((a, b) => b["Top 4 Rate"] - a["Top 4 Rate"])
-    .slice(0, 10);
+  // Show instruction message if no search has been performed
+  if (!hasSearched && !loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-white">
+        <div className="text-center py-12">
+          <div className="mb-6">
+            <svg className="mx-auto h-24 w-24 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">TFT Traits Performance</h2>
+          <p className="text-gray-600 mb-2">Enter your PUUID above and click Search to analyze your trait performance.</p>
+          <p className="text-sm text-gray-500">This will show which traits lead to your best and worst placements in Set 13.</p>
+        </div>
+      </div>
+    );
+  }
 
-  const sortedBottomTraits = [...allTraits]
-    .sort((a, b) => b["Bottom 4 Rate"] - a["Bottom 4 Rate"])
-    .slice(0, 10);
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-white">
+        <div className="text-center py-12">
+          <div className="mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+          <h2 className="text-xl font-semibold mb-4">Analyzing Traits...</h2>
+          <div className="text-gray-600">
+            <p className="mb-2">Processing your match history and calculating trait performance...</p>
+            <p className="text-sm">This may take 30-60 seconds depending on your match history.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const currentTraits = activeTab === 'top' ? sortedTopTraits : sortedBottomTraits;
+  // Show error state or no data
+  if (!data || (!data.top_traits && !data.bottom_traits)) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-white">
+        <div className="text-center py-12">
+          <div className="mb-6">
+            <svg className="mx-auto h-16 w-16 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">No Trait Data Available</h2>
+          <div className="text-gray-600">
+            <p>Unable to load trait performance data. This could be due to:</p>
+            <ul className="mt-2 text-sm space-y-1">
+              <li>• Not enough Set 13 ranked games played</li>
+              <li>• Invalid PUUID or account not found</li>
+              <li>• API rate limiting or network issues</li>
+            </ul>
+            <p className="mt-4">Try searching with a different PUUID or try again later.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const topTraits = data.top_traits || [];
+  const bottomTraits = data.bottom_traits || [];
+  const currentTraits = activeTab === 'top' ? topTraits : bottomTraits;
 
   const getRankColor = (index: number, isTop: boolean) => {
     if (index === 0) return isTop ? '#ffd700' : '#ff6b6b'; // Gold for #1 top, Red for #1 bottom
@@ -222,7 +277,7 @@ const TraitsTable: React.FC = () => {
         <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
           <div className="text-sm font-medium text-green-800">Showing</div>
           <div className="text-2xl font-bold text-green-900">
-            {activeTab === 'top' ? 'Top 10' : 'Bottom 10'}
+            {activeTab === 'top' ? `Top ${topTraits.length}` : `Bottom ${bottomTraits.length}`}
           </div>
           <div className="text-sm text-green-700">
             {activeTab === 'top' ? 'Highest top 4 placement traits' : 'Highest bottom 4 placement traits'}
@@ -238,7 +293,7 @@ const TraitsTable: React.FC = () => {
         </div>
 
         <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-          <div className="text-sm font-medium text-purple-800">Average {activeTab === 'top' ? 'Top 4' : 'Bottom 4'} Placement</div>
+          <div className="text-sm font-medium text-purple-800">Average {activeTab === 'top' ? 'Top 4' : 'Bottom 4'} Rate</div>
           <div className="text-2xl font-bold text-purple-900">
             {currentTraits.length > 0 
               ? ((currentTraits.reduce((sum, trait) => sum + trait[activeTab === 'top' ? "Top 4 Rate" : "Bottom 4 Rate"], 0) / currentTraits.length) * 100).toFixed(1) + '%'
@@ -274,13 +329,18 @@ const TraitsTable: React.FC = () => {
         </table>
       </div>
 
-      {allTraits.length === 0 && (
-        <div className="text-center py-8">
-          <div className="text-gray-500">Loading trait data...</div>
+      {/* Analysis Summary */}
+      <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h4 className="font-semibold text-blue-800 mb-2">Analysis Summary</h4>
+        <div className="text-sm text-blue-700 space-y-1">
+          <p>• Analysis based on Set 13 matches only</p>
+          <p>• Only traits with 10+ appearances are included</p>
+          <p>• Top 4 placement = positions 1-4, Bottom 4 = positions 5-8</p>
+          <p>• Data refreshed in real-time from your recent matches</p>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default TraitsTable;
+export default TopTraits;
