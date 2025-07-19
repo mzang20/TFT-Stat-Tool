@@ -62,17 +62,10 @@ def get_match_data(match_id):
                     return None
                 
                 # Filter by TFT set
-                game_version = data.get('info', {}).get('tft_set_core_name', '')
-                if game_version:
-                    # Extract set number from game version (e.g., "TFTSet13_Anvil" -> 13)
-                    try:
-                        set_number = int(''.join(filter(str.isdigit, game_version.split('Set')[1] if 'Set' in game_version else '')))
-                        if set_number != TFT_SET:
-                            print(f"Match {match_id}: Wrong set (Set {set_number}, looking for Set {TFT_SET})")
-                            return None
-                    except (IndexError, ValueError):
-                        print(f"Match {match_id}: Could not parse set number from {game_version}")
-                        return None
+                game_version = data.get('info', {}).get('tft_set_number')
+                if game_version != TFT_SET:
+                    print(f"Match {match_id}: Wrong set ({game_version})")
+                    return None
                 
                 return data
             elif resp.status_code == 429:
