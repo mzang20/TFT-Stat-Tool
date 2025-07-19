@@ -106,7 +106,7 @@ def run_analysis(puuid):
             raise Exception("No match IDs found")
         
         # Process more matches to account for set filtering
-        matches_to_process = min(50, len(match_ids))
+        matches_to_process = 50
         print(f"Processing {matches_to_process} matches...")
         
         data = {'placement': [], 'traits': []}
@@ -173,8 +173,7 @@ def run_analysis(puuid):
         
         trait_counts = Counter(all_traits)
         
-        # Filter traits that appear in at least 3 games (lowered threshold)
-        min_appearances = max(3, successful_matches // 5)  # Dynamic threshold
+        min_appearances = 10
         valid_traits = {trait for trait, count in trait_counts.items() if count >= min_appearances}
         
         if not valid_traits:
