@@ -86,7 +86,7 @@ function App() {
             />
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            Example: ChangedByTheMoney#Justin
+            Example: VIT k3soju#000
           </div>
         </div>
         

@@ -105,7 +105,7 @@ const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => 
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">TFT Traits Performance</h2>
-          <p className="text-gray-600 mb-2">Enter your PUUID above and click Search to analyze your trait performance.</p>
+          <p className="text-gray-600 mb-2">Enter your username above and click Search to analyze your trait performance.</p>
           <p className="text-sm text-gray-500">This will show which traits lead to your best and worst placements in Set 14.</p>
         </div>
       </div>
@@ -145,10 +145,10 @@ const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => 
             <p>Unable to load trait performance data. This could be due to:</p>
             <ul className="mt-2 text-sm space-y-1">
               <li>• Not enough Set 14 ranked games played</li>
-              <li>• Invalid PUUID or account not found</li>
+              <li>• Invalid username or account not found</li>
               <li>• API rate limiting or network issues</li>
             </ul>
-            <p className="mt-4">Try searching with a different PUUID or try again later.</p>
+            <p className="mt-4">Try searching with a different username or try again later.</p>
           </div>
         </div>
       </div>
