@@ -236,7 +236,7 @@ def run_analysis(puuid):
 # ===============================
 
 app = Flask(__name__)
-CORS(app, origins=["*"])
+CORS(app)  # Enable CORS for React frontend
 
 # Set up logging
 logging.basicConfig(
