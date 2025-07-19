@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: tft-backend
+    env: python
+    buildCommand: pip install -r tft_backend/requirements.txt
+    startCommand: python main.py
+    workingDir: tft_backend
+    autoDeploy: true
