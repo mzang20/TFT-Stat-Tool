@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TopTraits from './topTraits';
 
 function App() {
   const [activeTab, setActiveTab] = useState('augment');
@@ -61,10 +62,7 @@ function App() {
           </div>
         )}
         {activeTab === 'traits' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Traits Content</h2>
-            <p>This is the content for Traits. Show trait information and synergies here.</p>
-          </div>
+            <TopTraits />
         )}
       </div>
     </div>
