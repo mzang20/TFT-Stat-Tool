@@ -14,8 +14,8 @@ def get_match_ids(puuid):
     if not API_KEY:
         raise Exception("RIOT_API_KEY not found in environment variables")
     
-    # Reduce match count to avoid rate limits and timeouts
-    url = f"https://{MASS_REGION}.api.riotgames.com/tft/match/v1/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={API_KEY}"
+    # Increase match count to get more Set 13 data
+    url = f"https://{MASS_REGION}.api.riotgames.com/tft/match/v1/matches/by-puuid/{puuid}/ids?start=0&count=50&api_key={API_KEY}"
     print(f"Requesting match IDs for PUUID: {puuid[:8]}...")
     
     try:
@@ -105,8 +105,8 @@ def run_analysis(puuid):
         if not match_ids:
             raise Exception("No match IDs found")
         
-        # Limit matches to process (reduce API calls and execution time)
-        matches_to_process = min(15, len(match_ids))
+        # Process more matches to account for set filtering
+        matches_to_process = min(50, len(match_ids))
         print(f"Processing {matches_to_process} matches...")
         
         data = {'placement': [], 'traits': []}
@@ -114,9 +114,9 @@ def run_analysis(puuid):
         set_filtered_matches = 0
         
         for i, match_id in enumerate(match_ids[:matches_to_process]):
-            if i > 0 and i % 5 == 0:  # Rate limiting pause every 5 matches
+            if i > 0 and i % 10 == 0:  # Rate limiting pause every 10 matches
                 print(f"Processed {i} matches, brief pause...")
-                time.sleep(2)
+                time.sleep(3)
             
             match_data = get_match_data(match_id)
             if not match_data:
