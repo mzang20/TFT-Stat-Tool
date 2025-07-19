@@ -236,7 +236,7 @@ def run_analysis(puuid):
 # ===============================
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
+CORS(app, origins=["*"])
 
 # Set up logging
 logging.basicConfig(
@@ -245,24 +245,76 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@app.route('/api/analyze', methods=['POST'])
-def analyze_player():
-    """
-    Analyze a player's TFT trait performance
-    Expected JSON body: {"puuid": "player_puuid"}
-    Returns: {"top_traits": [...], "bottom_traits": [...]}
-    """
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint"""
+    return jsonify({
+        'message': 'TFT Analysis API is running',
+        'endpoints': {
+            'health': '/health',
+            'api_health': '/api/health',
+            'analyze_post': '/analyze',
+            'analyze_get': '/analyze?puuid=YOUR_PUUID'
+        }
+    }), 200
+
+@app.route('/health', methods=['GET'])
+def health_simple():
+    """Simple health check"""
+    return jsonify({
+        'status': 'healthy', 
+        'message': 'TFT Analysis API is running',
+        'api_key_configured': bool(API_KEY)
+    }), 200
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """API health check endpoint"""
+    return jsonify({
+        'status': 'healthy', 
+        'message': 'TFT Analysis API is running',
+        'api_key_configured': bool(API_KEY)
+    }), 200
+
+@app.route('/test', methods=['GET', 'POST', 'OPTIONS'])
+def simple_test():
+    """Simple test endpoint"""
+    return jsonify({
+        'message': 'Test endpoint working',
+        'method': request.method,
+        'has_json': bool(request.get_json()),
+        'content_type': request.content_type
+    }), 200
+
+@app.route('/analyze', methods=['GET', 'POST', 'OPTIONS'])
+def analyze_player_main():
+    """Main analyze endpoint supporting GET and POST"""
+    if request.method == 'OPTIONS':
+        # Handle CORS preflight
+        return jsonify({'message': 'CORS preflight'}), 200
+    
     try:
-        # Get PUUID from request
-        data = request.get_json()
-        
-        if not data or 'puuid' not in data:
-            return jsonify({'error': 'PUUID is required'}), 400
-        
-        puuid = data['puuid'].strip()
+        # Get PUUID from either GET params or POST body
+        if request.method == 'GET':
+            puuid = request.args.get('puuid')
+        else:  # POST
+            data = request.get_json()
+            if not data or 'puuid' not in data:
+                return jsonify({'error': 'PUUID is required'}), 400
+            puuid = data['puuid']
         
         if not puuid:
-            return jsonify({'error': 'PUUID cannot be empty'}), 400
+            return jsonify({'error': 'PUUID is required'}), 400
+        
+        puuid = puuid.strip()
         
         # Basic PUUID validation
         if len(puuid) < 20:
@@ -302,33 +354,17 @@ def analyze_player():
         else:
             return jsonify({'error': f'Analysis failed: {error_message}'}), 500
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Simple health check endpoint"""
-    return jsonify({
-        'status': 'healthy', 
-        'message': 'TFT Analysis API is running',
-        'api_key_configured': bool(API_KEY)
-    }), 200
-
-@app.route('/analyze', methods=['GET'])
-def analyze_player_get():
-    """Alternative GET endpoint for testing"""
-    try:
-        puuid = request.args.get('puuid')
-        if not puuid:
-            return jsonify({'error': 'PUUID parameter is required'}), 400
-        
-        top_traits, bottom_traits = run_analysis(puuid)
-        
-        return jsonify({
-            'top_traits': top_traits,
-            'bottom_traits': bottom_traits,
-            'message': 'Analysis completed successfully'
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@app.route('/api/analyze', methods=['POST', 'OPTIONS'])
+def api_analyze_player():
+    """
+    API analyze endpoint for backwards compatibility
+    Expected JSON body: {"puuid": "player_puuid"}
+    """
+    if request.method == 'OPTIONS':
+        return jsonify({'message': 'CORS preflight'}), 200
+    
+    # Redirect to main analyze function
+    return analyze_player_main()
 
 if __name__ == '__main__':
     # Check configuration on startup
@@ -338,8 +374,8 @@ if __name__ == '__main__':
         print("✅ Riot API key configured")
     
     print("🚀 Starting TFT Analysis API server...")
-    print("📍 Health check: http://localhost:5000/api/health")
-    print("📊 Analysis endpoint: POST http://localhost:5000/api/analyze")
+    print("📍 Health check: http://localhost:5000/health")
+    print("📊 Analysis endpoint: POST http://localhost:5000/analyze")
     
     # Run the Flask app
     app.run(debug=True, host='0.0.0.0', port=5000)
