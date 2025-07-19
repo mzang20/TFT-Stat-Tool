@@ -112,7 +112,7 @@ def analyze_by_riot_id():
         elif "Rate limited" in error_message:
             return jsonify({'error': 'Rate limited by Riot API. Please try again in a few minutes.'}), 429
         elif "Insufficient" in error_message:
-            return jsonify({'error': 'Not enough Set 13 matches found for analysis. Play more ranked games and try again.'}), 400
+            return jsonify({'error': 'Not enough Set 14 matches found for analysis. Play more ranked games and try again.'}), 400
         elif "Network error" in error_message or "timeout" in error_message.lower():
             return jsonify({'error': 'Network error. Please check your connection and try again.'}), 503
         else:

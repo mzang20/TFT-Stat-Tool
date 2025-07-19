@@ -14,7 +14,7 @@ import sys
 load_dotenv()
 API_KEY = os.getenv("RIOT_API_KEY")
 MASS_REGION = "americas"
-TFT_SET = 13  # Set number for filtering matches
+TFT_SET = 14  # Set number for filtering matches
 
 def get_puuid_from_riot_id(game_name, tag_line):
     """Get PUUID from Riot ID (game name + tag line)"""
