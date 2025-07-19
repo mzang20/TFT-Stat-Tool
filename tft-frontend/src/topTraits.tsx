@@ -40,19 +40,19 @@ const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => 
         if (Array.isArray(data)) {
           traitsArray = data.filter((entry: any) => (
             typeof entry === 'object' &&
-            entry?.apiName?.startsWith('TFT13_') &&
+            entry?.apiName?.startsWith('TFT14_') &&
             entry?.icon?.includes('Trait_Icon')
           )) as TraitMeta[];
         } else if (typeof data === 'object' && data !== null) {
           if (data.setData && Array.isArray(data.setData)) {
-            const set13 = data.setData.find((set: any) => 
-              set.number === 13 || set.name?.includes('13') || set.name?.toLowerCase().includes('thirteen')
+            const set14 = data.setData.find((set: any) => 
+              set.number === 14 || set.name?.includes('14') || set.name?.toLowerCase().includes('thirteen')
             );
             
-            if (set13 && set13.traits && Array.isArray(set13.traits)) {
-              traitsArray = set13.traits.filter((entry: any) => (
+            if (set14 && set14.traits && Array.isArray(set14.traits)) {
+              traitsArray = set14.traits.filter((entry: any) => (
                 typeof entry === 'object' &&
-                entry?.apiName?.startsWith('TFT13_') &&
+                entry?.apiName?.startsWith('TFT14_') &&
                 entry?.icon?.includes('Trait_Icon')
               )) as TraitMeta[];
             }
@@ -60,7 +60,7 @@ const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => 
             const values = Object.values(data);
             traitsArray = values.filter((entry: any) => (
               typeof entry === 'object' &&
-              entry?.apiName?.startsWith('TFT13_') &&
+              entry?.apiName?.startsWith('TFT14_') &&
               entry?.icon?.includes('Trait_Icon')
             )) as TraitMeta[];
           }
@@ -106,7 +106,7 @@ const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => 
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">TFT Traits Performance</h2>
           <p className="text-gray-600 mb-2">Enter your PUUID above and click Search to analyze your trait performance.</p>
-          <p className="text-sm text-gray-500">This will show which traits lead to your best and worst placements in Set 13.</p>
+          <p className="text-sm text-gray-500">This will show which traits lead to your best and worst placements in Set 14.</p>
         </div>
       </div>
     );
@@ -137,14 +137,14 @@ const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => 
         <div className="text-center py-12">
           <div className="mb-6">
             <svg className="mx-auto h-16 w-16 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h14.856c1.54 0 2.502-1.667 1.732-2.5L14.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
           <h2 className="text-xl font-semibold mb-4 text-gray-900">No Trait Data Available</h2>
           <div className="text-gray-600">
             <p>Unable to load trait performance data. This could be due to:</p>
             <ul className="mt-2 text-sm space-y-1">
-              <li>• Not enough Set 13 ranked games played</li>
+              <li>• Not enough Set 14 ranked games played</li>
               <li>• Invalid PUUID or account not found</li>
               <li>• API rate limiting or network issues</li>
             </ul>
@@ -333,7 +333,7 @@ const TopTraits: React.FC<TopTraitsProps> = ({ data, loading, hasSearched }) => 
       <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <h4 className="font-semibold text-blue-800 mb-2">Analysis Summary</h4>
         <div className="text-sm text-blue-700 space-y-1">
-          <p>• Analysis based on Set 13 matches only</p>
+          <p>• Analysis based on Set 14 matches only</p>
           <p>• Only traits with 10+ appearances are included</p>
           <p>• Top 4 placement = positions 1-4, Bottom 4 = positions 5-8</p>
           <p>• Data refreshed in real-time from your recent matches</p>
