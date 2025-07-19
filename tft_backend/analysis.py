@@ -120,7 +120,7 @@ def run_analysis(puuid):
         
         # Create DataFrame and filter for current set (like your original code)
         df = pd.DataFrame(data)
-        current_set = df['set_number'].max() if not df.empty else 13
+        current_set = 13
         df = df[df['set_number'] == current_set].copy()
         
         if df.empty:
