@@ -2,7 +2,7 @@ import { useState } from 'react';
 import TopTraits from './topTraits';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('augment');
+  const [activeTab, setActiveTab] = useState('item');
   const [gameName, setGameName] = useState('');
   const [tagLine, setTagLine] = useState('');
   const [loading, setLoading] = useState(false);
@@ -114,8 +114,8 @@ function App() {
       <div role="tablist" className="tabs tabs-lifted justify-center">
         <button 
           role="tab" 
-          className={`tab ${activeTab === 'augment' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('augment')}
+          className={`tab ${activeTab === 'item' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('item')}
           disabled={loading}
         >
           Augment
@@ -140,10 +140,10 @@ function App() {
 
       {/* Tab Content */}
       <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-        {activeTab === 'augment' && (
+        {activeTab === 'item' && (
           <div>
             <h2 className="text-xl font-semibold mb-2">Augment Content</h2>
-            <p>This is the content for Augment. You can display augment information here.</p>
+            <p>This is the content for Augment. You can display item information here.</p>
           </div>
         )}
         {activeTab === 'units' && (
