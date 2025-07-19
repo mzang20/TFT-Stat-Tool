@@ -1,9 +1,11 @@
+# main.py
+
 from flask import Flask, request, jsonify
 from analysis import run_analysis
 
 app = Flask(__name__)
 
-@app.route('/analyze')
+@app.route('/analyze', methods=['GET'])
 def analyze():
     puuid = request.args.get('puuid')
     if not puuid:
@@ -18,4 +20,4 @@ def analyze():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=10000)
