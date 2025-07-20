@@ -1,0 +1,62 @@
+[
+  {
+    "Trait":"TFT13_JunkerKing",
+    "Top 4 Rate":0.7142857143,
+    "Bottom 4 Rate":0.2857142857,
+    "Games Played":14
+  },
+  {
+    "Trait":"TFT13_Academy",
+    "Top 4 Rate":0.6666666667,
+    "Bottom 4 Rate":0.3333333333,
+    "Games Played":12
+  },
+  {
+    "Trait":"TFT13_FormSwapper",
+    "Top 4 Rate":0.5625,
+    "Bottom 4 Rate":0.4375,
+    "Games Played":16
+  },
+  {
+    "Trait":"TFT13_Infused",
+    "Top 4 Rate":0.5625,
+    "Bottom 4 Rate":0.4375,
+    "Games Played":16
+  },
+  {
+    "Trait":"TFT13_Titan",
+    "Top 4 Rate":0.5185185185,
+    "Bottom 4 Rate":0.4814814815,
+    "Games Played":27
+  },
+  {
+    "Trait":"TFT13_Rebel",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":24
+  },
+  {
+    "Trait":"TFT13_Warband",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":32
+  },
+  {
+    "Trait":"TFT13_Invoker",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":18
+  },
+  {
+    "Trait":"TFT13_Bruiser",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":12
+  },
+  {
+    "Trait":"TFT13_Squad",
+    "Top 4 Rate":0.5,
+    "Bottom 4 Rate":0.5,
+    "Games Played":12
+  }
+]
