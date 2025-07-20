@@ -177,8 +177,8 @@ def run_analysis(puuid):
         # Step 1: Count all augment appearances
         augment_counts = Counter([augment for augments in df['augments'] for augment in augments])
         
-        # Step 2: Filter out augments with <=10 total appearances (match original threshold)
-        valid_augments = {augment for augment, count in augment_counts.items() if count > 10}
+        # Step 2: Filter out augments with <= total appearances (match original threshold)
+        valid_augments = {augment for augment, count in augment_counts.items() if count > 1}
         
         if not valid_augments:
             raise Exception("No augments found with sufficient frequency")
