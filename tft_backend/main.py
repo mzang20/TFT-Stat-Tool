@@ -64,11 +64,6 @@ def health_check():
             "items_by_puuid": "/analyze-items?puuid=YOUR_PUUID", 
             "items_by_riot_id": "/analyze-items-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE"
         },
-        "examples": {
-            "traits_riot_id": "/analyze-traits-riot-id?gameName=WukLamatHater&tagLine=Monke",
-            "items_riot_id": "/analyze-items-riot-id?gameName=WukLamatHater&tagLine=Monke",
-            "traits_puuid": "/analyze-traits?puuid=oeUTUlTvQIJUxqO955b0viyfcv_-2zvQgTSdhgFJg1nTNJpPSMgtu65dKhC780TONNCU91gxAdNjdQ"
-        }
     })
 
 # TRAIT ANALYSIS
