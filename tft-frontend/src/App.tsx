@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import TopTraits from './topTraits';
+import TopItems from './topItems';
+import TopAugments from './TopAugments';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('augment');
+  const [activeTab, setActiveTab] = useState('traits');
   const [gameName, setGameName] = useState('');
   const [tagLine, setTagLine] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [analysisData, setAnalysisData] = useState(null);
+  const [traitsData, setTraitsData] = useState(null);
+  const [itemsData, setItemsData] = useState(null);
+  const [augmentsData, setAugmentsData] = useState(null);
 
   const handleSearch = async () => {
     if (!gameName.trim() || !tagLine.trim()) {
@@ -17,31 +21,73 @@ function App() {
 
     setLoading(true);
     setError('');
-    setAnalysisData(null);
+    setTraitsData(null);
+    setItemsData(null);
+    setAugmentsData(null);
 
     try {
       console.log('Making request with Riot ID:', `${gameName.trim()}#${tagLine.trim()}`);
       
-      // Use the backend riot-id endpoint
-      const response = await fetch(`https://tft-stat-tool.onrender.com/analyze-riot-id?gameName=${encodeURIComponent(gameName.trim())}&tagLine=${encodeURIComponent(tagLine.trim())}`, {
-        method: 'GET',
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+      const baseUrl = 'https://tft-stat-tool.onrender.com';
+      const params = `gameName=${encodeURIComponent(gameName.trim())}&tagLine=${encodeURIComponent(tagLine.trim())}`;
       
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
+      // Fetch traits, items, and augments in parallel
+      const [traitsResponse, itemsResponse, augmentsResponse] = await Promise.all([
+        fetch(`${baseUrl}/analyze-traits-riot-id?${params}`, { method: 'GET' }),
+        fetch(`${baseUrl}/analyze-items-riot-id?${params}`, { method: 'GET' }),
+        fetch(`${baseUrl}/analyze-augments-riot-id?${params}`, { method: 'GET' })
+      ]);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}, response: ${responseText}`);
+      console.log('Traits response status:', traitsResponse.status);
+      console.log('Items response status:', itemsResponse.status);
+      console.log('Augments response status:', augmentsResponse.status);
+      
+      // Handle traits response
+      if (traitsResponse.ok) {
+        const traitsText = await traitsResponse.text();
+        const traitsData = JSON.parse(traitsText);
+        setTraitsData(traitsData);
+        console.log('Traits data:', traitsData);
+      } else {
+        const traitsError = await traitsResponse.text();
+        console.error('Traits error:', traitsError);
       }
-
-      const data = JSON.parse(responseText);
-      setAnalysisData(data);
       
-      // Switch to traits tab to show results
-      setActiveTab('traits');
+      // Handle items response
+      if (itemsResponse.ok) {
+        const itemsText = await itemsResponse.text();
+        const itemsData = JSON.parse(itemsText);
+        setItemsData(itemsData);
+        console.log('Items data:', itemsData);
+      } else {
+        const itemsError = await itemsResponse.text();
+        console.error('Items error:', itemsError);
+      }
+      
+      // Handle augments response
+      if (augmentsResponse.ok) {
+        const augmentsText = await augmentsResponse.text();
+        const augmentsData = JSON.parse(augmentsText);
+        setAugmentsData(augmentsData);
+        console.log('Augments data:', augmentsData);
+      } else {
+        const augmentsError = await augmentsResponse.text();
+        console.error('Augments error:', augmentsError);
+      }
+      
+      // If all failed, show error
+      if (!traitsResponse.ok && !itemsResponse.ok && !augmentsResponse.ok) {
+        throw new Error(`Analysis failed. Traits: ${traitsResponse.status}, Items: ${itemsResponse.status}, Augments: ${augmentsResponse.status}`);
+      }
+      
+      // Switch to the first successful tab to show results
+      if (traitsResponse.ok) {
+        setActiveTab('traits');
+      } else if (itemsResponse.ok) {
+        setActiveTab('items');
+      } else if (augmentsResponse.ok) {
+        setActiveTab('augments');
+      }
       
     } catch (err) {
       console.error('Full error details:', err);
@@ -114,11 +160,27 @@ function App() {
       <div role="tablist" className="tabs tabs-lifted justify-center">
         <button 
           role="tab" 
-          className={`tab ${activeTab === 'augment' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('augment')}
+          className={`tab ${activeTab === 'traits' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('traits')}
           disabled={loading}
         >
-          Augment
+          Traits
+        </button>
+        <button 
+          role="tab" 
+          className={`tab ${activeTab === 'items' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('items')}
+          disabled={loading}
+        >
+          Items
+        </button>
+        <button 
+          role="tab" 
+          className={`tab ${activeTab === 'augments' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('augments')}
+          disabled={loading}
+        >
+          Augments
         </button>
         <button 
           role="tab" 
@@ -128,36 +190,36 @@ function App() {
         >
           Units
         </button>
-        <button 
-          role="tab" 
-          className={`tab ${activeTab === 'traits' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('traits')}
-          disabled={loading}
-        >
-          Traits
-        </button>
       </div>
 
       {/* Tab Content */}
       <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-        {activeTab === 'augment' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Augment Content</h2>
-            <p>This is the content for Augment. You can display augment information here.</p>
-          </div>
+        {activeTab === 'traits' && (
+          <TopTraits 
+            data={traitsData} 
+            loading={loading}
+            hasSearched={!!traitsData || !!error}
+          />
+        )}
+        {activeTab === 'items' && (
+          <TopItems 
+            data={itemsData} 
+            loading={loading}
+            hasSearched={!!itemsData || !!error}
+          />
+        )}
+        {activeTab === 'augments' && (
+          <TopAugments 
+            data={augmentsData} 
+            loading={loading}
+            hasSearched={!!augmentsData || !!error}
+          />
         )}
         {activeTab === 'units' && (
           <div>
             <h2 className="text-xl font-semibold mb-2">Units Content</h2>
             <p>This is the content for Units. Display unit information and stats here.</p>
           </div>
-        )}
-        {activeTab === 'traits' && (
-          <TopTraits 
-            data={analysisData} 
-            loading={loading}
-            hasSearched={!!analysisData || !!error}
-          />
         )}
       </div>
     </div>
