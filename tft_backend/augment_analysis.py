@@ -138,9 +138,18 @@ def run_analysis(puuid):
                 traits = [trait['name'] for trait in participant_data['traits']]
                 units = [unit['character_id'] for unit in participant_data['units']]
                 items = [item.get('itemNames', []) for item in participant_data['units']]
+
+                print(f"DEBUG: Available fields in participant_data: {list(participant_data.keys())}")
+
+                # DEBUG: Look for augment-related fields
+                for key in participant_data.keys():
+                    if 'augment' in key.lower():
+                        print(f"DEBUG: Found augment field '{key}': {participant_data[key]}")
                 
                 # Extract augments - this is the new part!
                 augments = participant_data.get('augments', [])
+
+                print(f"DEBUG: Extracted augments: {augments}")
                 
                 # Add to dataset like original
                 data['placement'].append(placement)
