@@ -68,9 +68,101 @@ def health_check():
             "items_by_puuid": "/analyze-items?puuid=YOUR_PUUID", 
             "items_by_riot_id": "/analyze-items-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE",
             "units_by_puuid": "/analyze-units?puuid=YOUR_PUUID",
-            "units_by_riot_id": "/analyze-units-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE"
+            "units_by_riot_id": "/analyze-units-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE",
+            "combined_analysis": "/analyze-all-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE"
         }
     })
+
+# COMBINED ANALYSIS (NEW - RECOMMENDED)
+@app.route('/analyze-all-riot-id')
+def analyze_all_by_riot_id():
+    try:
+        game_name = request.args.get('gameName')
+        tag_line = request.args.get('tagLine')
+        
+        if not game_name or not tag_line:
+            return jsonify({'error': 'Both gameName and tagLine parameters are required'}), 400
+        
+        game_name = game_name.strip()
+        tag_line = tag_line.strip()
+        
+        if not game_name or not tag_line:
+            return jsonify({'error': 'Game name and tag line cannot be empty'}), 400
+        
+        print(f"Starting combined analysis for Riot ID: {game_name}#{tag_line}")
+        
+        # Get PUUID once
+        puuid = get_puuid_from_riot_id(game_name, tag_line)
+        
+        # Run all three analyses (they'll share the same match data fetching)
+        traits_success = True
+        items_success = True
+        units_success = True
+        
+        try:
+            print("Running traits analysis...")
+            top_traits, bottom_traits = run_trait_analysis(puuid)
+            print(f"Traits analysis completed - {len(top_traits)} top traits")
+        except Exception as e:
+            print(f"Traits analysis failed: {e}")
+            top_traits, bottom_traits = [], []
+            traits_success = False
+        
+        try:
+            print("Running items analysis...")
+            top_items, bottom_items = run_item_analysis(puuid)
+            print(f"Items analysis completed - {len(top_items)} top items")
+        except Exception as e:
+            print(f"Items analysis failed: {e}")
+            top_items, bottom_items = [], []
+            items_success = False
+            
+        try:
+            print("Running units analysis...")
+            units_results = run_units_analysis(puuid)
+            print(f"Units analysis completed - {len(units_results.get('top_units', []))} units analyzed")
+        except Exception as e:
+            print(f"Units analysis failed: {e}")
+            units_results = {'top_units': []}
+            units_success = False
+        
+        # Check if at least one analysis succeeded
+        if not (traits_success or items_success or units_success):
+            return jsonify({'error': 'All analyses failed. Please try again later.'}), 500
+        
+        # Return combined results
+        result = {
+            'traits': {
+                'top_traits': top_traits,
+                'bottom_traits': bottom_traits,
+                'success': traits_success
+            },
+            'items': {
+                'top_items': top_items,
+                'bottom_items': bottom_items,
+                'success': items_success
+            },
+            'units': {
+                **units_results,
+                'success': units_success
+            },
+            'riot_id': f"{game_name}#{tag_line}",
+            'puuid': puuid[:8] + '...',
+            'tft_set': trait_analysis.TFT_SET,
+            'message': 'Combined analysis completed',
+            'analyses_completed': {
+                'traits': traits_success,
+                'items': items_success,
+                'units': units_success
+            }
+        }
+        
+        print(f"Combined analysis completed for {game_name}#{tag_line}")
+        print(f"Success: Traits={traits_success}, Items={items_success}, Units={units_success}")
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return _handle_analysis_error(e, "combined")
 
 # TRAIT ANALYSIS
 @app.route('/analyze-traits-riot-id')
@@ -290,6 +382,7 @@ if __name__ == "__main__":
     
     print(f"🚀 Starting TFT Analysis API server... (Set {trait_analysis.TFT_SET})")
     print("📍 Health check and endpoints: /")
+    print("📊 Combined analysis: /analyze-all-riot-id?gameName=NAME&tagLine=TAG")
     print("📊 Trait analysis: /analyze-traits-riot-id?gameName=NAME&tagLine=TAG")
     print("📊 Item analysis: /analyze-items-riot-id?gameName=NAME&tagLine=TAG")
     print("📊 Units analysis: /analyze-units-riot-id?gameName=NAME&tagLine=TAG")
