@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from trait_analysis import run_analysis as run_trait_analysis
 from item_analysis import run_analysis as run_item_analysis
-from augment_analysis import run_analysis as run_augment_analysis
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -64,9 +63,7 @@ def health_check():
             "traits_by_puuid": "/analyze-traits?puuid=YOUR_PUUID",
             "traits_by_riot_id": "/analyze-traits-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE",
             "items_by_puuid": "/analyze-items?puuid=YOUR_PUUID", 
-            "items_by_riot_id": "/analyze-items-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE",
-            "augments_by_puuid": "/analyze-augments?puuid=YOUR_PUUID",
-            "augments_by_riot_id": "/analyze-augments-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE"
+            "items_by_riot_id": "/analyze-items-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE"
         }
     })
 
@@ -186,74 +183,6 @@ def analyze_items():
             "tft_set": item_analysis.TFT_SET,
             "analysis_type": "items",
             "message": f"Set {item_analysis.TFT_SET} item analysis completed successfully"
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-# AUGMENT ANALYSIS
-@app.route('/analyze-augments-riot-id')
-def analyze_augments_by_riot_id():
-    """
-    Analyze a player's TFT augment performance using Riot ID
-    Usage: GET /analyze-augments-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE
-    """
-    try:
-        game_name = request.args.get('gameName')
-        tag_line = request.args.get('tagLine')
-        
-        if not game_name or not tag_line:
-            return jsonify({'error': 'Both gameName and tagLine parameters are required'}), 400
-        
-        game_name = game_name.strip()
-        tag_line = tag_line.strip()
-        
-        if not game_name or not tag_line:
-            return jsonify({'error': 'Game name and tag line cannot be empty'}), 400
-        
-        print(f"Starting Set {trait_analysis.TFT_SET} augment analysis for Riot ID: {game_name}#{tag_line}")
-        
-        # First, get the PUUID from Riot ID
-        puuid = get_puuid_from_riot_id(game_name, tag_line)
-        
-        # Then run the augment analysis with the PUUID
-        top_augments, bottom_augments = run_augment_analysis(puuid)
-        
-        # Return the results
-        result = {
-            'top_augments': top_augments,
-            'bottom_augments': bottom_augments,
-            'riot_id': f"{game_name}#{tag_line}",
-            'puuid': puuid[:8] + '...',
-            'tft_set': trait_analysis.TFT_SET,
-            'analysis_type': 'augments',
-            'message': f'Set {trait_analysis.TFT_SET} augment analysis completed successfully'
-        }
-        
-        print(f"Set {trait_analysis.TFT_SET} augment analysis completed successfully for {game_name}#{tag_line}")
-        return jsonify(result), 200
-        
-    except Exception as e:
-        return _handle_analysis_error(e, "augment")
-
-@app.route('/analyze-augments')
-def analyze_augments():
-    """
-    Analyze a player's TFT augment performance using PUUID
-    Usage: GET /analyze-augments?puuid=PLAYER_PUUID
-    """
-    puuid = request.args.get('puuid')
-    if not puuid:
-        return jsonify({"error": "Missing PUUID"}), 400
-    
-    try:
-        top, bot = run_augment_analysis(puuid)
-        return jsonify({
-            "top_augments": top,
-            "bottom_augments": bot,
-            "puuid": puuid[:8] + '...',
-            "tft_set": trait_analysis.TFT_SET,
-            "analysis_type": "augments",
-            "message": f"Set {trait_analysis.TFT_SET} augment analysis completed successfully"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
