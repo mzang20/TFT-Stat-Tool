@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from trait_analysis import run_analysis as run_trait_analysis
 from item_analysis import run_analysis as run_item_analysis
+from unit_analysis import run_analysis as run_units_analysis
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,8 +14,10 @@ MASS_REGION = "americas"
 # Import and override the TFT_SET from analysis modules
 import trait_analysis as trait_analysis
 import item_analysis as item_analysis
+import unit_analysis as unit_analysis
 trait_analysis.TFT_SET = 14  # Force Set 14
 item_analysis.TFT_SET = 14   # Force Set 14
+unit_analysis.TFT_SET = 14   # Force Set 14
 
 app = Flask(__name__)
 CORS(app)
@@ -63,7 +66,9 @@ def health_check():
             "traits_by_puuid": "/analyze-traits?puuid=YOUR_PUUID",
             "traits_by_riot_id": "/analyze-traits-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE",
             "items_by_puuid": "/analyze-items?puuid=YOUR_PUUID", 
-            "items_by_riot_id": "/analyze-items-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE"
+            "items_by_riot_id": "/analyze-items-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE",
+            "units_by_puuid": "/analyze-units?puuid=YOUR_PUUID",
+            "units_by_riot_id": "/analyze-units-riot-id?gameName=GAME_NAME&tagLine=TAG_LINE"
         }
     })
 
@@ -187,6 +192,67 @@ def analyze_items():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# UNITS ANALYSIS
+@app.route('/analyze-units-riot-id')
+def analyze_units_by_riot_id():
+    try:
+        game_name = request.args.get('gameName')
+        tag_line = request.args.get('tagLine')
+        unit_name = request.args.get('unit')  # Optional: analyze specific unit
+        
+        if not game_name or not tag_line:
+            return jsonify({'error': 'Both gameName and tagLine parameters are required'}), 400
+        
+        game_name = game_name.strip()
+        tag_line = tag_line.strip()
+        
+        if not game_name or not tag_line:
+            return jsonify({'error': 'Game name and tag line cannot be empty'}), 400
+        
+        print(f"Starting Set {unit_analysis.TFT_SET} units analysis for Riot ID: {game_name}#{tag_line}")
+        
+        # First, get the PUUID from Riot ID
+        puuid = get_puuid_from_riot_id(game_name, tag_line)
+        
+        # Then run the units analysis with the PUUID
+        results = run_units_analysis(puuid, unit_name)
+        
+        # Return the results
+        result = {
+            **results,
+            'riot_id': f"{game_name}#{tag_line}",
+            'puuid': puuid[:8] + '...',
+            'tft_set': unit_analysis.TFT_SET,
+            'analysis_type': 'units',
+            'message': f'Set {unit_analysis.TFT_SET} units analysis completed successfully'
+        }
+        
+        print(f"Set {unit_analysis.TFT_SET} units analysis completed successfully for {game_name}#{tag_line}")
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return _handle_analysis_error(e, "units")
+
+@app.route('/analyze-units')
+def analyze_units():
+    puuid = request.args.get('puuid')
+    unit_name = request.args.get('unit')  # Optional: analyze specific unit
+    
+    if not puuid:
+        return jsonify({"error": "Missing PUUID"}), 400
+    
+    try:
+        results = run_units_analysis(puuid, unit_name)
+        return jsonify({
+            **results,
+            "puuid": puuid[:8] + '...',
+            "tft_set": unit_analysis.TFT_SET,
+            "analysis_type": "units",
+            "message": f"Set {unit_analysis.TFT_SET} units analysis completed successfully"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # LEGACY ENDPOINTS
 @app.route('/analyze-riot-id')
 def analyze_by_riot_id():
@@ -226,6 +292,7 @@ if __name__ == "__main__":
     print("📍 Health check and endpoints: /")
     print("📊 Trait analysis: /analyze-traits-riot-id?gameName=NAME&tagLine=TAG")
     print("📊 Item analysis: /analyze-items-riot-id?gameName=NAME&tagLine=TAG")
+    print("📊 Units analysis: /analyze-units-riot-id?gameName=NAME&tagLine=TAG")
     
     # Use PORT environment variable for Render, fallback to 5000
     port = int(os.environ.get("PORT", 5000))
