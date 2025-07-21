@@ -134,8 +134,8 @@ def analyze_unit(unit_df, unit_name, cd_data, top_n=10, min_games=3):
             .reset_index()
         )
         
-        # Filter: only show combos seen in at least 5 games
-        item_stats = item_stats[item_stats['count'] >= 5]
+        # Filter: only show combos seen in at least 3 games
+        item_stats = item_stats[item_stats['count'] >= 3]
         
         # Sort and take top N
         item_stats = item_stats.sort_values('mean').head(top_n).reset_index(drop=True)
@@ -313,8 +313,8 @@ def run_analysis(puuid, unit_name=None):
             top_units = []
             
             for unit, count in unit_counts.items():
-                if count >= 5:  # Only analyze units with at least 5 games
-                    analysis = analyze_unit(unit_df, unit, cd_data, top_n=5, min_games=3)
+                if count >= 3:  # Only analyze units with at least 3 games
+                    analysis = analyze_unit(unit_df, unit, cd_data, top_n=5, min_games=2)
                     if 'error' not in analysis:
                         analysis['total_games'] = int(count)
                         top_units.append(analysis)
