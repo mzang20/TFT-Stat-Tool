@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import TopTraits from './topTraits';
 import TopItems from './topItems';
-import TopAugments from './TopAugments';
 
 function App() {
   const [activeTab, setActiveTab] = useState('traits');
@@ -11,7 +10,6 @@ function App() {
   const [error, setError] = useState('');
   const [traitsData, setTraitsData] = useState(null);
   const [itemsData, setItemsData] = useState(null);
-  const [augmentsData, setAugmentsData] = useState(null);
 
   const handleSearch = async () => {
     if (!gameName.trim() || !tagLine.trim()) {
@@ -23,7 +21,6 @@ function App() {
     setError('');
     setTraitsData(null);
     setItemsData(null);
-    setAugmentsData(null);
 
     try {
       console.log('Making request with Riot ID:', `${gameName.trim()}#${tagLine.trim()}`);
@@ -31,16 +28,14 @@ function App() {
       const baseUrl = 'https://tft-stat-tool.onrender.com';
       const params = `gameName=${encodeURIComponent(gameName.trim())}&tagLine=${encodeURIComponent(tagLine.trim())}`;
       
-      // Fetch traits, items, and augments in parallel
-      const [traitsResponse, itemsResponse, augmentsResponse] = await Promise.all([
+      // Fetch traits and items in parallel
+      const [traitsResponse, itemsResponse] = await Promise.all([
         fetch(`${baseUrl}/analyze-traits-riot-id?${params}`, { method: 'GET' }),
-        fetch(`${baseUrl}/analyze-items-riot-id?${params}`, { method: 'GET' }),
-        fetch(`${baseUrl}/analyze-augments-riot-id?${params}`, { method: 'GET' })
+        fetch(`${baseUrl}/analyze-items-riot-id?${params}`, { method: 'GET' })
       ]);
 
       console.log('Traits response status:', traitsResponse.status);
       console.log('Items response status:', itemsResponse.status);
-      console.log('Augments response status:', augmentsResponse.status);
       
       // Handle traits response
       if (traitsResponse.ok) {
@@ -64,20 +59,9 @@ function App() {
         console.error('Items error:', itemsError);
       }
       
-      // Handle augments response
-      if (augmentsResponse.ok) {
-        const augmentsText = await augmentsResponse.text();
-        const augmentsData = JSON.parse(augmentsText);
-        setAugmentsData(augmentsData);
-        console.log('Augments data:', augmentsData);
-      } else {
-        const augmentsError = await augmentsResponse.text();
-        console.error('Augments error:', augmentsError);
-      }
-      
       // If all failed, show error
-      if (!traitsResponse.ok && !itemsResponse.ok && !augmentsResponse.ok) {
-        throw new Error(`Analysis failed. Traits: ${traitsResponse.status}, Items: ${itemsResponse.status}, Augments: ${augmentsResponse.status}`);
+      if (!traitsResponse.ok && !itemsResponse.ok) {
+        throw new Error(`Analysis failed. Traits: ${traitsResponse.status}, Items: ${itemsResponse.status}`);
       }
       
       // Switch to the first successful tab to show results
@@ -85,8 +69,6 @@ function App() {
         setActiveTab('traits');
       } else if (itemsResponse.ok) {
         setActiveTab('items');
-      } else if (augmentsResponse.ok) {
-        setActiveTab('augments');
       }
       
     } catch (err) {
@@ -176,14 +158,6 @@ function App() {
         </button>
         <button 
           role="tab" 
-          className={`tab ${activeTab === 'augments' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('augments')}
-          disabled={loading}
-        >
-          Augments
-        </button>
-        <button 
-          role="tab" 
           className={`tab ${activeTab === 'units' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('units')}
           disabled={loading}
@@ -206,13 +180,6 @@ function App() {
             data={itemsData} 
             loading={loading}
             hasSearched={!!itemsData || !!error}
-          />
-        )}
-        {activeTab === 'augments' && (
-          <TopAugments 
-            data={augmentsData} 
-            loading={loading}
-            hasSearched={!!augmentsData || !!error}
           />
         )}
         {activeTab === 'units' && (
