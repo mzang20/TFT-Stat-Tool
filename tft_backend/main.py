@@ -76,6 +76,7 @@ def health_check():
 # COMBINED ANALYSIS (NEW - RECOMMENDED)
 @app.route('/analyze-all-riot-id')
 def analyze_all_by_riot_id():
+    print("DEBUG: Combined endpoint called - NEW VERSION")
     try:
         game_name = request.args.get('gameName')
         tag_line = request.args.get('tagLine')
