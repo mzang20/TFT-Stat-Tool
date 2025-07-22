@@ -117,18 +117,23 @@ def analyze_all_by_riot_id():
             top_items, bottom_items = [], []
             items_success = False
             
+        # UNITS ANALYSIS - Replace your current units section with this:
         try:
             print("Running units analysis...")
             units_results = run_units_analysis(puuid)
-            print(f"Units analysis completed - {len(units_results.get('top_units', []))} units analyzed")
+            
+            # Check if we got valid results
+            if units_results and units_results.get('top_units') and len(units_results.get('top_units', [])) > 0:
+                print(f"Units analysis completed - {len(units_results.get('top_units', []))} units analyzed")
+                units_success = True
+            else:
+                print("Units analysis returned empty results")
+                units_success = False
+                units_results = {'top_units': [], 'total_games_analyzed': 0, 'total_unit_instances': 0}
+                
         except Exception as e:
             print(f"Units analysis failed: {e}")
-            units_results = {'top_units': []}
-            units_success = False
-
-        if units_results and units_results.get('top_units'):
-            units_success = True
-        else:
+            units_results = {'top_units': [], 'total_games_analyzed': 0, 'total_unit_instances': 0}
             units_success = False
         
         # Check if at least one analysis succeeded
