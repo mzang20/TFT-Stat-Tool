@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import TopTraits from './topTraits';
 import TopItems from './topItems';
+import TopUnits from './topUnits';
 
 function App() {
   const [activeTab, setActiveTab] = useState('traits');
@@ -10,6 +11,7 @@ function App() {
   const [error, setError] = useState('');
   const [traitsData, setTraitsData] = useState(null);
   const [itemsData, setItemsData] = useState(null);
+  const [unitsData, setUnitsData] = useState(null);
 
   const handleSearch = async () => {
     if (!gameName.trim() || !tagLine.trim()) {
@@ -21,54 +23,95 @@ function App() {
     setError('');
     setTraitsData(null);
     setItemsData(null);
+    setUnitsData(null);
 
     try {
-      console.log('Making request with Riot ID:', `${gameName.trim()}#${tagLine.trim()}`);
-      
       const baseUrl = 'https://tft-stat-tool.onrender.com';
       const params = `gameName=${encodeURIComponent(gameName.trim())}&tagLine=${encodeURIComponent(tagLine.trim())}`;
       
-      // Fetch traits and items in parallel
-      const [traitsResponse, itemsResponse] = await Promise.all([
-        fetch(`${baseUrl}/analyze-traits-riot-id?${params}`, { method: 'GET' }),
-        fetch(`${baseUrl}/analyze-items-riot-id?${params}`, { method: 'GET' })
-      ]);
-
-      console.log('Traits response status:', traitsResponse.status);
-      console.log('Items response status:', itemsResponse.status);
+      const response = await fetch(`${baseUrl}/analyze-all-riot-id?${params}`, { method: 'GET' });
       
-      // Handle traits response
-      if (traitsResponse.ok) {
-        const traitsText = await traitsResponse.text();
-        const traitsData = JSON.parse(traitsText);
-        setTraitsData(traitsData);
-        console.log('Traits data:', traitsData);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // DEBUG: Log the entire response
+        console.log('FULL RESPONSE:', JSON.stringify(data, null, 2));
+        console.log('Units section:', data.units);
+        console.log('Units success:', data.units?.success);
+        console.log('Units top_units:', data.units?.top_units);
+        
+        // Extract individual analysis results
+        if (data.traits && data.traits.success) {
+          setTraitsData({
+            top_traits: data.traits.top_traits,
+            bottom_traits: data.traits.bottom_traits,
+            riot_id: data.riot_id,
+            tft_set: data.tft_set
+          });
+        }
+        
+        if (data.items && data.items.success) {
+          setItemsData({
+            top_items: data.items.top_items,
+            bottom_items: data.items.bottom_items,
+            riot_id: data.riot_id,
+            tft_set: data.tft_set
+          });
+        }
+        
+        // Units data
+        console.log('Checking units data...');
+        console.log('data.units exists:', !!data.units);
+        console.log('data.units.success:', data.units?.success);
+        console.log('data.units.top_units exists:', !!data.units?.top_units);
+        console.log('data.units.top_units length:', data.units?.top_units?.length);
+        
+        if (data.units && data.units.success) {
+          console.log('Setting units data - SUCCESS PATH');
+          const unitsDataToSet = {
+            top_units: data.units.top_units,
+            total_games_analyzed: data.units.total_games_analyzed,
+            total_unit_instances: data.units.total_unit_instances,
+            riot_id: data.riot_id,
+            tft_set: data.tft_set
+          };
+          console.log('unitsDataToSet:', unitsDataToSet);
+          setUnitsData(unitsDataToSet);
+          console.log('Units data successfully set:', unitsDataToSet);
+        } else if (data.units) {
+          console.log('Setting units data - FALLBACK PATH (no success check)');
+          const unitsDataToSet = {
+            top_units: data.units.top_units || [],
+            total_games_analyzed: data.units.total_games_analyzed || 0,
+            total_unit_instances: data.units.total_unit_instances || 0,
+            riot_id: data.riot_id,
+            tft_set: data.tft_set
+          };
+          console.log('unitsDataToSet (fallback):', unitsDataToSet);
+          setUnitsData(unitsDataToSet);
+        } else if (data.top_units) {
+          const unitsDataToSet = {
+            top_units: data.top_units,
+            total_games_analyzed: data.total_games_analyzed,
+            total_unit_instances: data.total_unit_instances,
+            riot_id: data.riot_id,
+            tft_set: data.tft_set
+          };
+          setUnitsData(unitsDataToSet);
+        }
+        
+        // Switch to first successful tab
+        if (data.traits && data.traits.success) {
+          setActiveTab('traits');
+        } else if (data.items && data.items.success) {
+          setActiveTab('items');
+        } else if (data.units && data.units.top_units !== undefined) {
+          setActiveTab('units');
+        }
+        
       } else {
-        const traitsError = await traitsResponse.text();
-        console.error('Traits error:', traitsError);
-      }
-      
-      // Handle items response
-      if (itemsResponse.ok) {
-        const itemsText = await itemsResponse.text();
-        const itemsData = JSON.parse(itemsText);
-        setItemsData(itemsData);
-        console.log('Items data:', itemsData);
-      } else {
-        const itemsError = await itemsResponse.text();
-        console.error('Items error:', itemsError);
-      }
-      
-      // If all failed, show error
-      if (!traitsResponse.ok && !itemsResponse.ok) {
-        throw new Error(`Analysis failed. Traits: ${traitsResponse.status}, Items: ${itemsResponse.status}`);
-      }
-      
-      // Switch to the first successful tab to show results
-      if (traitsResponse.ok) {
-        setActiveTab('traits');
-      } else if (itemsResponse.ok) {
-        setActiveTab('items');
+        const errorText = await response.text();
+        throw new Error(`Analysis failed: ${response.status} - ${errorText}`);
       }
       
     } catch (err) {
@@ -183,10 +226,11 @@ function App() {
           />
         )}
         {activeTab === 'units' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Units Content</h2>
-            <p>This is the content for Units. Display unit information and stats here.</p>
-          </div>
+          <TopUnits 
+            data={unitsData} 
+            loading={loading}
+            hasSearched={!!unitsData || !!error}
+          />
         )}
       </div>
     </div>
