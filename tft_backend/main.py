@@ -6,6 +6,7 @@ from trait_analysis import run_analysis as run_trait_analysis
 from item_analysis import run_analysis as run_item_analysis
 from unit_analysis import run_analysis as run_units_analysis
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 API_KEY = os.getenv("RIOT_API_KEY")
@@ -104,6 +105,7 @@ def analyze_all_by_riot_id():
             print("Running traits analysis...")
             top_traits, bottom_traits = run_trait_analysis(puuid)
             print(f"Traits analysis completed - {len(top_traits)} top traits")
+            time.sleep(5)
         except Exception as e:
             print(f"Traits analysis failed: {e}")
             top_traits, bottom_traits = [], []
@@ -113,6 +115,7 @@ def analyze_all_by_riot_id():
             print("Running items analysis...")
             top_items, bottom_items = run_item_analysis(puuid)
             print(f"Items analysis completed - {len(top_items)} top items")
+            time.sleep(5)
         except Exception as e:
             print(f"Items analysis failed: {e}")
             top_items, bottom_items = [], []
