@@ -118,23 +118,37 @@ def analyze_all_by_riot_id():
             items_success = False
             
         # UNITS ANALYSIS - Replace your current units section with this:
+        units_success = False  # Initialize as False, not True
         try:
             print("Running units analysis...")
             units_results = run_units_analysis(puuid)
+            print(f"Units analysis raw result type: {type(units_results)}")
+            print(f"Units analysis result keys: {list(units_results.keys()) if isinstance(units_results, dict) else 'Not a dict'}")
             
             # Check if we got valid results
-            if units_results and units_results.get('top_units') and len(units_results.get('top_units', [])) > 0:
-                print(f"Units analysis completed - {len(units_results.get('top_units', []))} units analyzed")
-                units_success = True
+            if units_results and isinstance(units_results, dict):
+                top_units = units_results.get('top_units', [])
+                print(f"Found {len(top_units)} units in results")
+                
+                if len(top_units) > 0:
+                    print(f"Units analysis completed - {len(top_units)} units analyzed")
+                    units_success = True
+                else:
+                    print("Units analysis returned empty top_units list")
             else:
-                print("Units analysis returned empty results")
-                units_success = False
-                units_results = {'top_units': [], 'total_games_analyzed': 0, 'total_unit_instances': 0}
+                print(f"Units analysis returned invalid result: {units_results}")
                 
         except Exception as e:
-            print(f"Units analysis failed: {e}")
+            print(f"Units analysis failed with exception: {e}")
+            import traceback
+            traceback.print_exc()
             units_results = {'top_units': [], 'total_games_analyzed': 0, 'total_unit_instances': 0}
-            units_success = False
+
+        # Fallback if units_results is not set or invalid
+        if not isinstance(units_results, dict):
+            units_results = {'top_units': [], 'total_games_analyzed': 0, 'total_unit_instances': 0}
+
+        print(f"Final units_success: {units_success}")
         
         # Check if at least one analysis succeeded
         if not (traits_success or items_success or units_success):
